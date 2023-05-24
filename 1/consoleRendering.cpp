@@ -1,6 +1,5 @@
 ﻿#include<iostream>
 #include<concrt.h>
-#include<thread>
 #include<Windows.h>
 #include<stdlib.h>
 #include<algorithm>
@@ -14,6 +13,7 @@ static constexpr float SurfaceDist = 0.001f;
 struct float3
 {
 	float x, y, z;
+	float3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 	
 	float3 operator*(const float& rhs)
 	{
@@ -183,7 +183,7 @@ float GetDist(float3 pos, float time)
 {
 	float minDist;
 
-	minDist = sdf3dTorus(pos, { 0.f,3.f ,0.f }, 4.2f, 1.6f, normalize({ sinf(time),0.f,cosf(time) }));
+	minDist = sdf3dTorus(pos, { 0.f,3.f ,0.f }, 4.2f, 1.6f, normalize({ sinf(time*0.5f),0.f,cosf(time*0.5f) }));
 
 
 	return minDist;
@@ -207,11 +207,20 @@ float RayMarching(float3 origin, float3 dir, float time)
 
 float3 GetNormal(float3 pos, float time)
 {
-	float d = GetDist(pos, time);
-	float3 n = float3({ d,d,d }) -
-		float3({ GetDist(pos - float3({0.001f, 0.f, 0.f}), time), GetDist(pos - float3({0.f, 0.001f, 0.f}), time), GetDist(pos - float3({0.f, 0.f, 0.0001f}), time) });
+	//유한 차분법
 
-	return normalize(n);
+	float h = SurfaceDist;
+	float diffX = GetDist(pos + float3(h, 0.f, 0.f), time) - GetDist(pos - float3(h, 0.f, 0.f), time);
+	float diffY = GetDist(pos + float3(0.f, h, 0.f), time) - GetDist(pos - float3(0.f, h, 0.f), time);
+	float diffZ = GetDist(pos + float3(0.f, 0.f, h) ,time) - GetDist(pos - float3(0.f, 0.f, h) ,time);
+
+	return normalize(float3(diffX, diffY, diffZ));
+
+	//float d = GetDist(pos, time);
+	//float3 n = float3({ d,d,d }) -
+	//	float3({ GetDist(pos - float3({0.001f, 0.f, 0.f}), time), GetDist(pos - float3({0.f, 0.001f, 0.f}), time), GetDist(pos - float3({0.f, 0.f, 0.0001f}), time) });
+
+	//return normalize(n);
 }
 
 float GetLight(float3 pos, float time, float3 normal)
@@ -313,7 +322,7 @@ int main()
 					float intensity = GetLight(currPos, time, GetSphereNormal(currPos, spherePos));
 					int N = (int)roundf(intensity * (_countof(c) - 2));
 
-					cout << c[clampi(N,0, (_countof(c) - 2))];
+					cout << c[clampi(N, 0, (_countof(c) - 2))];
 				}
 
 
