@@ -14,55 +14,55 @@ struct float3
 {
 	float x, y, z;
 	float3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-	
+
 	float3 operator*(const float& rhs)
 	{
-		return float3{ x * rhs,y * rhs,z * rhs };
+		return float3(x * rhs, y * rhs, z * rhs);
 	}
 
 	float3 operator/(const float& rhs)
 	{
-		return float3{ x / rhs,y / rhs,z / rhs };
+		return float3(x / rhs, y / rhs, z / rhs);
 	}
 
 	float3 operator/(const float3& rhs)
 	{
-		return float3{ x / rhs.x,y / rhs.y,z / rhs.z };
+		return float3(x / rhs.x, y / rhs.y, z / rhs.z);
 	}
 
 	float3 operator*(const float3& rhs)
 	{
-		return float3{ x * rhs.x, y * rhs.y, z * rhs.z };
+		return float3(x * rhs.x, y * rhs.y, z * rhs.z);
 	}
 
 	float3 operator+(const float3& rhs)
 	{
-		return float3{ x + rhs.x, y + rhs.y, z + rhs.z };
+		return float3(x + rhs.x, y + rhs.y, z + rhs.z);
 	}
 
 	float3 operator-(const float3& rhs)
 	{
-		return float3{ x - rhs.x, y - rhs.y, z - rhs.z };
+		return float3(x - rhs.x, y - rhs.y, z - rhs.z);
 	}
 
 	float3 operator-()
 	{
-		return float3{ -x, -y, -z };
+		return float3(-x, -y, -z);
 	}
 
 	static float3 abs(const float3& rhs)
 	{
-		return float3{ ::abs(rhs.x),::abs(rhs.y) ,::abs(rhs.z) };
+		return float3(::abs(rhs.x), ::abs(rhs.y), ::abs(rhs.z));
 	}
 
 	static float3 Min(const float3& rhs, const float3& a)
 	{
-		return float3{ min(rhs.x,a.x),min(rhs.y,a.y), min(rhs.z,a.z) };
+		return float3(min(rhs.x, a.x), min(rhs.y, a.y), min(rhs.z, a.z));
 	}
 
 	static float3 Max(const float3& rhs, const float3& a)
 	{
-		return float3{ max(rhs.x,a.x),max(rhs.y,a.y), max(rhs.z,a.z) };
+		return float3(max(rhs.x, a.x), max(rhs.y, a.y), max(rhs.z, a.z));
 	}
 
 };
@@ -131,7 +131,7 @@ float sdf3dTorus(float3 _point, float3 torus, float inside, float thickness, flo
 float sdf3dBox(float3 _point, float3 box, float3 boxSize)
 {
 	_point = float3::abs(_point - box) - boxSize;
-	return length(float3::Max(_point, { 0.f,0.f,0.f })) + min( max( max(_point.x, _point.y), _point.z), 0.f);
+	return length(float3::Max(_point, float3( 0.f,0.f,0.f ))) + min( max( max(_point.x, _point.y), _point.z), 0.f);
 }
 
 float sdf3dCapsule(float3 _point, float3 A, float3 B, float radius)
@@ -156,7 +156,7 @@ float sdf3dCylinder(float3 _point, float3 A, float3 B, float radius)
 	float d = length(_point - proj_ap) - radius;
 	float y = (abs(t * invLen_ab - 0.5f) - 0.5f) * Len_ab;
 
-	float e = length(float3::Max({ d, y ,0.f }, { 0.f ,0.f,0.f }));
+	float e = length(float3::Max(float3(d, y, 0.f), float3(0.f, 0.f, 0.f)));
 	float i = min(max(d, y), 0.f);
 
 	return e + i;
@@ -170,11 +170,11 @@ float sdf3dCone(float3 _point, float3 cone,float rad,  float3 direction, float h
 	float dr = length(_point - direction* dh);
 	float fp = clamp((rad * dr - height * dh) / (height * height + rad * rad), 0.f, 1.f);
 
-	float dCircle = length(float3({ max(dr - rad, 0.f), dh + height, 0.f }));
+	float dCircle = length(float3( max(dr - rad, 0.f), dh + height, 0.f ));
 
 	float u = dr - fp * rad;
 	float v = dh + fp * height;
-	float dCone = length(float3({ u, v ,0.f}));
+	float dCone = length(float3( u, v ,0.f));
 
 	return (-height < dh&& u < 0.f && v < 0.f) ? -min(dCone, dCircle) : min(dCone, dCircle);
 }
@@ -183,7 +183,7 @@ float GetDist(float3 pos, float time)
 {
 	float minDist;
 
-	minDist = sdf3dTorus(pos, { 0.f,3.f ,0.f }, 4.2f, 1.6f, normalize({ sinf(time*0.5f),0.f,cosf(time*0.5f) }));
+	minDist = sdf3dTorus(pos, float3(0.f, 3.f, 0.f), 4.2f, 1.6f, normalize(float3(sinf(time * 0.5f), 0.f, cosf(time * 0.5f))));
 
 
 	return minDist;
@@ -215,17 +215,11 @@ float3 GetNormal(float3 pos, float time)
 	float diffZ = GetDist(pos + float3(0.f, 0.f, h) ,time) - GetDist(pos - float3(0.f, 0.f, h) ,time);
 
 	return normalize(float3(diffX, diffY, diffZ));
-
-	//float d = GetDist(pos, time);
-	//float3 n = float3({ d,d,d }) -
-	//	float3({ GetDist(pos - float3({0.001f, 0.f, 0.f}), time), GetDist(pos - float3({0.f, 0.001f, 0.f}), time), GetDist(pos - float3({0.f, 0.f, 0.0001f}), time) });
-
-	//return normalize(n);
 }
 
 float GetLight(float3 pos, float time, float3 normal)
 {
-	float3 lightPos = float3({ sinf(time*3.f) * 6.f,  4.f,cosf(time*3.f) * 6.f });
+	float3 lightPos = float3( sinf(time*3.f) * 6.f,  4.f,cosf(time*3.f) * 6.f );
 	float3 lightDir = normalize(pos - lightPos);
 	float3 reflectDir = -lightDir;
 	float lightIntensity = max(dot(normal, reflectDir), 0.f);
@@ -281,7 +275,7 @@ int main()
 	cout.tie(nullptr);
 	CursorView(false);
 
-	float3 rayOrigin = { 0.f,3.f,-8.f };//시작점
+	float3 rayOrigin = float3( 0.f,3.f,-8.f );//시작점
 
 	float aspect = (float)X / Y;
 	float time = -3.f;
@@ -295,15 +289,15 @@ int main()
 			for (int u = 0; u < X; ++u)
 			{
 				//광선의 방향벡터
-				float3 rayDir = { (2.f*(0.5f+u) - X)/Y, -(2.f * (0.5f + v) - Y) / Y , 1.f }; 
+				float3 rayDir = float3((2.f * (0.5f + u) - X) / Y, -(2.f * (0.5f + v) - Y) / Y, 1.f);
 				rayDir = normalize(rayDir);
 
 			#if 0
 				float marchDist = RayMarching(rayOrigin, rayDir, time);
 			
-				if (marchDist > MaxDist)
+				if (marchDist > MaxDist)//실패
 					cout << " ";
-				else
+				else//성공
 				{
 					float3 currPos = rayOrigin + rayDir * marchDist;
 					float intensity = GetLight(currPos, time, GetNormal(currPos, time));
@@ -312,7 +306,7 @@ int main()
 					cout << c[clampi(N,0, (_countof(c) - 2))];
 				}
 			#else
-				float3 spherePos = {0.f,3.f,0.f};
+				float3 spherePos = float3(0.f, 3.f, 0.f);
 				float intersectDist = sphereIntersect(rayOrigin, rayDir,spherePos, 3.f);
 				if(intersectDist < -0.f) //교차 실패
 					cout << " ";
@@ -320,7 +314,7 @@ int main()
 				{
 					float3 currPos = rayOrigin + rayDir * intersectDist;//직선에 방적식에 t1을 대입하여 얻은 교차점
 					float intensity = GetLight(currPos, time, GetSphereNormal(currPos, spherePos));
-					int N = (int)roundf(intensity * (_countof(c) - 2));
+					int N = (int)roundf(intensity * (_countof(c) - 2));//문자열 index
 
 					cout << c[clampi(N, 0, (_countof(c) - 2))];
 				}
