@@ -14,6 +14,7 @@ struct float3
 {
 	float x, y, z;
 	float3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+	float3(float s) : x(s), y(s), z(s) {}
 
 	float3 operator*(const float& rhs)
 	{
@@ -181,12 +182,26 @@ float sdf3dCone(float3 _point, float3 cone,float rad,  float3 direction, float h
 
 float GetDist(float3 pos, float time)
 {
-	float minDist;
+	float dist;
 
-	minDist = sdf3dTorus(pos, float3(0.f, 3.f, 0.f), 4.2f, 1.6f, normalize(float3(sinf(time * 0.5f), 0.f, cosf(time * 0.5f))));
+	//점과 점 사이의 거리
+	float3 targetPoint = float3(0.f,3.f,0.f);
+	float rad = 3.f;
+
+	//rad += sinf(time*5.f)*2.f;
+
+	// float s = sinf(time * 3.f);
+	// s *= s;
+	// s *= s;
+	// pos.y -= smoothStep(1.f,0.3f,s)*3.f -1.5f;
+	// pos.y *= s*1.5f + 1.f;
+
+	dist = length(pos - targetPoint) - rad;
+
+	//dist = min(dist, sdf3dTorus(pos, targetPoint, rad + 2.5f, 1.f, float3(0.f,sinf(time),cosf(time))));
 
 
-	return minDist;
+	return dist;
 }
 
 float RayMarching(float3 origin, float3 dir, float time)
@@ -195,10 +210,10 @@ float RayMarching(float3 origin, float3 dir, float time)
 	for (int i = 0; i < 256; ++i)
 	{
 		float3 ray = origin + dir * hitDist;
-		float curr = GetDist(ray, time);
-		if (hitDist > MaxDist || curr < SurfaceDist)
+		float currDist = GetDist(ray, time);
+		if (hitDist > MaxDist || currDist < SurfaceDist)//실패 또는 성공
 			break;
-		hitDist += curr;
+		hitDist += currDist;
 	}
 
 	return hitDist;
@@ -292,7 +307,7 @@ int main()
 				float3 rayDir = float3((2.f * (0.5f + u) - X) / Y, -(2.f * (0.5f + v) - Y) / Y, 1.f);
 				rayDir = normalize(rayDir);
 
-			#if 0
+			#if 1
 				float marchDist = RayMarching(rayOrigin, rayDir, time);
 			
 				if (marchDist > MaxDist)//실패
